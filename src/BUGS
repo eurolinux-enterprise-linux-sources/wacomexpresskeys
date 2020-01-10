@@ -1,0 +1,96 @@
+
+_Known bugs marked with FIXME in the code_
+
+! Return errors are not caught from the system(3) call, only straight errors
+(e.g. fork() failed). So we never actually know if xsetwacom did its job
+properly when changing stylus PressCurve or doing tablet Rotate.
+
+_Known bugs, unmarked_
+
+! Pressing a pad button with one program window in focus, moving the focus to
+another program window and then releasing the button, probably leaves the first
+program in a confused mind regarding the keyboard state. Returning the focus and
+pressing the button again (or another that has an effect) restores the sanity.
+
+_NOTABUG_
+
+[NOTE: The story below was written when I only owned an Intuos3 tablet. Having
+bought a Graphire4, I was pleased/shocked to see the stylus behaving _perfectly_
+even with Qt-based programs! Both ButtonPress and ProximityIn/Out were
+propagated through the Xlib environment exactly as they should. Could there be
+a bug in the linuxwacom drivers instead of one in Qt? Had I judged too quickly?
+
+Asking a Volito2 owner (who also happens to be a skilled programmer) about the
+stylus-issue did not clear the waters... ButtonPress was swallowed in KDE,
+just like it was for my Intuos3. Furthermore, _ProximityOut_ never became
+visible on his system.
+
+Comparing debug output from the linuxwacom X driver, for Volito2/Graphire4
+/Intuos3, showed them to be almost identical when it came to events. The driver
+correctly hands X everything it should get.
+
+I must admit to being totally confused at this point in time. Why the striking
+differences between tablet models? Why Qt and not GTK+? Why, for heavens sake,
+even a ProximityIn/Out discrepancy?
+
+So, take what you read below with a grain of salt. Blame-wise I could be
+barking up the wrong alley. In that case, Mea Culpa. Pardon etc etc :END NOTE]
+
+--Begin Original Text--
+
+Any program built with the Qt3 toolkit (like eg the KDE desktop...)
+completely swallows the 'stylus' DeviceButtonPress event that we've
+registered to be notified of, through the Xlib XSelectExtensionEvent
+call. The same event coming from the 'pad' device is all OK, though.
+
+This is a (deliberate?) Qt pattern where only other Qt programs,
+with difficulty, can get deliverance of these low-level events. At
+least that's my impression after a first round of bug-report emails
+between here and there --> Qt producer company Trolltech.
+
+Why they let 'pad' button events pass through is probably due to lack
+of knowledge. They recognize an oldtimer like the 'stylus', so BAM,
+grab it. But this strange 'pad' thing... better stay out of contact...
+
+Programs based on the GTK+ toolkit like the Gnome desktop (with the
+notable exception being the Gimp canvas - more about that below) do
+behave appropriate vis-a-vis both the 'stylus' and 'pad' button events.
+
+This situation has led to one design compromise (performance slippage)
+in expresskeys 0.3.0, and a not wholly ideal usability pattern when
+dealing with Qt3 programs.
+
+Performance wise we take a hit by also registering for and acting on
+a 'stylus' ProximityIn event. These events are not blocked by Qt3.
+
+Execution of the "automatic change of stylus pressure sensitivity"
+in a Qt3 program is achieved by first lifting the pen slightly (until
+it goes out of proximity - the cursor stops being effected by pen
+movement) and then lowering the pen again on the target window.
+
+If we happen to be in Gnome, it is enough to touch the Qt3 program on
+the titlebar or on its other borders (since they are GTK+ derived).
+
+GTK+ based programs suffer no such limitation. In those we just press
+the pen tip in the window, and by that action the pressure sensitivity
+change is performed. Unless the target is the Gimp canvas (at least as
+high as version 2.2.13)...
+
+The Gimp canvas is even _more_ broken (in regards to our expectations)
+than the Qt3 programs. Here both the 'stylus' DeviceButtonPress AND
+the ProximityIn events are filtered away from interested parties.
+
+So in order to get the automatic change of stylus pressure sensitivity
+when coming in from another program window, the pen tip or side button
+rocker first must engage _somwhere else_ than the canvas. Just touching
+the Gimp titlebar or touching an area outside of the canvas will work.
+
+If we happen to be in KDE while using Gimp, then a simple titlebar
+touch won't work (all the borders are Qt3 derived). Here we must do the
+proximity out/in trick on a part not being the canvas, or touch
+somewhere else than the window borders/Gimp canvas.
+
+[A paragraph with faulty logic was deleted. Ed.]
+
+--End Original Text--
+

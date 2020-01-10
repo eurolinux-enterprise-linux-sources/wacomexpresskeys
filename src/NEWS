@@ -1,0 +1,7 @@
+
+_Changes since last version. Executive summary_
+
+- Implemented a slightly better logic for Touch Strip movement detection.
+
+OBSERVE: linuxwacom-0.7.5-2 or greater is now required for ALL tablets!
+

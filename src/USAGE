@@ -1,0 +1,503 @@
+
+Please direct any bug reports or questions to the top address in the AUTHORS
+file. This program is _not_ a linuxwacom project.
+
+///////////////////////////////////////////////////////////////////////////
+
+Important: If you use the linuxwacom-0.6.7-beta or in the future released
+versions you must change the pad statement in X config file to:
+
+Section "ServerLayout"
+[...]
+InputDevice "pad" # Intuos3/Cintiq 21UX/Graphire4. It must NOT send core event
+[...]
+EndSection
+
+See: http://linuxwacom.sourceforge.net/index.php/howto/srvlayout
+
+If you use the old pad statement, any pad button press can jump the mouse
+cursor to the upper left corner (0,0) when another tool isn't in proximity.
+
+///////////////////////////////////////////////////////////////////////////
+
+Important: linuxwacom-0.7.5-2 or greater is now required for ALL tablets!
+
+A quick way to find out which release you have installed is to do a
+"xsetwacom -V" in a terminal (it should say 0.0.7 or more for linuxwacom-0.7.5-2
+and newer releases). Ask your distro maintainers to update the linuxwacom
+packages if they are too old. Or install from source yourself, it is not that
+hard...
+
+///////////////////////////////////////////////////////////////////////////
+
+Important: Gimp doesn't know _anything_ about a "pad" device, so the option
+File --> Preferences --> Input Devices --> Configure Extended Input Devices...
+--> [Device: pad  Mode: Disabled] is how it should be set. If you change it
+to Sceen or Window, pressing pad buttons or using touch strips will NOT work.
+
+///////////////////////////////////////////////////////////////////////////
+
+USAGE of expresskeys:
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Program can not be started unless X is running (except for sending signals
+to an already launched copy), and refuses to start if a daemon instance of the
+program is detected (through a live pid-file).
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Command line:
+
+Usage: expresskeys [OPTION]... [DEVICE]...
+Any combination of pad and/or stylus can be specified.
+An empty command line means automatic device search.
+Options can be written like -dv or -d --v in any place.
+
+  -d makes the program a daemon (runs in the background).
+  -k terminates (kills) an already running daemon instance.
+  -r re-reads the configuration files of a running daemon.
+  -s tells a daemon instance to report status (file/screen).
+  -v prints info to the screen at many execution points.
+  -x sets -v and exits after some important info blocks.
+  -h unconditionally brings up this help text.
+
+Example1: expresskeys -d (All 'pad's and/or 'stylus'es found get used)
+Example2: expresskeys 1stIntuos3Pad 1stIntuos3Stylus2 -d (named devices)
+Example3: expresskeys -rv (visibly re-read the configuration file)
+
+The names of pad or stylus devices are the "Identifier" strings in your X
+config file (xorg.conf). Myself I start expresskeys just before the window
+manager in .xinitrc with: /usr/local/bin/expresskeys -d
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Minimal configuration files are written on first run to the user home
+directory: ~/.expresskeys/intuos3.conf1 (.conf2 .conf3) for each connected
+tablet. Max 15: intuos3.conf1/2/3, intuos3s.conf1/2/3, graphire4.conf1/2/3,
+graphire4bt.conf1/2/3 and padless.conf1/2/3.
+
+'Models': nopad, Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3/Cintiq
+
+The files contain "default", "Gimp", "Blender" and "XTerm" entries and are
+re-created on program start whenever a configuration file for a connected
+tablet is missing.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* A file with the program PID number is written if run with -d in:
+~/.expresskeys/expresskeys.pid
+
+The pid-file is deleted on normal program exit like "expresskeys -k"
+
+You can also type "kill <pid>", "killall expresskeys", "kill -TERM <pid>" etc.
+A brutal "kill -9 <pid>" or a program crash will leave the pid-file undeleted.
+This is also the case if the program is terminated by X close-down on some
+systems.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* The ~/.expresskeys/status.log (created on program daemon launch) is updated
+whenever an "expresskeys -s" is used. It provides the same information as a
+non-daemon run with "expresskeys -x" would do. Just like the pid-file, it is
+deleted on normal program exit.
+
+This action can also be performed by doing a "kill -USR2 <pid-of-expresskeys>".
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* All the configuration files are re-read when you do an "expresskeys -r" and a
+daemon instance of the program is running.
+
+This action can also be performed by doing a "kill -USR1 <pid-of-expresskeys>"
+after a config file edit.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NOTE: There's a graphical point-and-click program in the offing at:
+http://alavaliant.googlepages.com that already supports expresskeys 0.2.x
+config file editing. The pygtk (2.8+) program is called "wacom-config"
+and will be updated to support expresskeys 0.3.x. It really does obsolete
+the following explanations of how to find keycodes and program names :NOTE
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Use the X program "xev" to find keycodes when changing the configuration.
+
+Since I've received a request for an explanation, I'll quote the reply:
+
+--Begin Letter--
+
+> I'm using your expresskeys for my intous3 but I'm
+> a linux newbie and now I'm a bit confused, what is
+> the right keycode or config for the arrow key.
+>
+> I want Space on 12
+> Left arrow on 9
+> Right arrow on 10
+
+Keycodes are both confusing and simple, at the same time ;-) They are
+different depending on your language and keyboard design, and also
+different if you are in X or not, but share some common details.
+
+To find how they are organized on your own keyboard, you must use a
+program. First (if you are in X as you should be) open a terminal. The
+only one I have per default is "xterm" since I don't use gnome or kde or
+anything like that, where a terminal window can be called just
+"terminal"... Other standalone terminals are "aterm", "rxvt", "eterm"
+etc.
+
+Now start a program from within the open terminal. One that _must_ be
+present on your system (I think) is "xev". It comes as standard with X.
+When you start xev it spawns another window (small white square) and
+spits out a lot of info in the terminal window. You must move the mouse
+pointer to the square window before doing any key presses.
+
+Ok, now I'll press Space, Left Arrow and Right Arrow:
+
+KeyPress event, serial 27, synthetic NO, window 0x1200001,
+    root 0x115, subw 0x0, time 5261195, (128,125), root:(138,145),
+    state 0x0, keycode 65 (keysym 0x20, space), same_screen YES,
+    XLookupString gives 1 bytes: (20) " "
+    XmbLookupString gives 1 bytes: (20) " "
+    XFilterEvent returns: False
+
+The important information here is the "keycode 65 (keysym 0x20, space)".
+There will be another information dump when you release the space key,
+called KeyRelease.
+
+So on my Swedish keyboard, X uses the keycode 65 to represent the
+spacebar. Ok, here's Left Arrow:
+
+KeyPress event, serial 27, synthetic NO, window 0x1200001,
+    root 0x115, subw 0x0, time 5281166, (128,125), root:(138,145),
+    state 0x0, keycode 100 (keysym 0xff51, Left), same_screen YES,
+    XLookupString gives 0 bytes:
+    XmbLookupString gives 0 bytes:
+    XFilterEvent returns: False
+
+Keycode is 100 here. Let's go to Right Arrow:
+
+KeyPress event, serial 27, synthetic NO, window 0x1200001,
+    root 0x115, subw 0x0, time 5283438, (128,125), root:(138,145),
+    state 0x0, keycode 102 (keysym 0xff53, Right), same_screen YES,
+    XLookupString gives 0 bytes:
+    XmbLookupString gives 0 bytes:
+    XFilterEvent returns: False
+
+So it's 102. When you are finished looking for the keycodes, give the
+terminal window focus (place the mouse cursor there or whatever) and
+press Ctrl-c (you can also click on the close button of the white square
+window).
+
+That's how it looks on this Swedish keyboard. Now open the expresskeys
+configuration file with any editor. The location is a hidden directory
+in your home directory. Here's mine:
+
+/home/loke/.expresskeys/intuos3.conf1
+
+Replace the keycodes in the section you are interested in, I'd do:
+[Original configfile version 2 text here updated to version 4. Ed.]
+
+LeftPadButton9        100     # Button 9 Left Arrow (Max keycodes to send is 32)
+LeftPadButton10       102     # Button 10 Right Arrow
+LeftPadButton11       37      # Button 11 Control
+LeftPadButton12       65      # Button 12 Space (was default)
+
+Save the file and read in the new values with "expresskeys -r"
+
+[Since each button/touch strip/scroll wheel now can send 32 keycodes at a time,
+I've deleted the original paragraph here. Ed.]
+
+--End Letter--
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Use the X program "xprop" to find the name string to use when changing
+the configuration. xprop without any arguments expects you to then click
+on the target window. We are looking for the WM_CLASS info so running:
+
+$ xprop | grep WM_CLASS
+WM_CLASS(STRING) = "VCLSalFrame", "OpenOffice.org 1.1.4"
+
+It's the last string we would use, the "OpenOffice.org 1.1.4". We always
+use the last part, and the spelling is case sensitive. Putting
+"openoffice.org 1.1.4" in the configuration file would not match up.
+
+A cleaner looking output from xprop can be had by eg running:
+
+$ xprop | grep WM_CLASS | cut -d ',' -f2
+ "OpenOffice.org 1.1.4"
+
+Also, since spaces are accepted as part of a class name, make sure there
+are no space _before or after_ the name, within the double quotes:
+
+"A ProgramName" <-- OK
+" A ProgramName" or "A ProgramName " <-- NOT-OK
+
+The extra space/s would become part of the class name. Not what you want.
+
+The very first entry (at the top) in the configuration file is named
+"default" and holds a key definition for all programs not specified in
+another entry. It also takes care of the root window (the "background")
+and programs lacking a class name in their WM_CLASS.
+
+[NOTE: the backgrounds in desktop programs like Gnome and KDE are not true
+'roots' and therefore have their own names, currently "Kdesktop" and "Nautilus".
+Create separate entries with these names if you want them to be handled
+differently than how the "default" program record does things :END NOTE]
+
+The "default" record must always exist in the configuration file! But it
+doesn't matter _where_. Put it last or first or wherever...
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NEW in expresskeys version 0.4.0 and above:
+
+Config file version 4 has gone even further than version 3 in independence.
+For example, this is a minimally accepted configuration file:
+
+ConfigVersion 4
+%%
+ProgramName "default"
+
+Expresskeys will not accomplish anything with such a minimalistic file, but
+we pass it as valid. That is, all fields not explicitly defined on the first
+file read are set to zero (0). Though, deleted fields are not reset to zero on
+a re-read. If more than one field with the same keyword is written in a program
+record, only the last one found is used on a re-read of the configuration file
+(except for the 'string' fields ProgramName, Stylus1PressCurve and
+Stylus2PressCurve, where only the first occurrence found is used).
+
+All the fields ending with "Plus" have been eliminated in version 4. They are
+not needed anymore since each regular keycode field can have as much as 32
+keycodes specified.
+
+New fields in version 4 (and their default values) are:
+
+_All tablets_:
+
+(Yet another stylus to have an automatic PressCurve set)
+Stylus2PressCurve "0 0 100 100" # PressCurve must be within double quotes ""
+
+_Graphire4 BlueTooth, Graphire4, Intuos3 small, Intuos3/Cintiq_:
+
+(A pause to place between sending of each keycode)
+DelayEachKeycode        0.0     # Seconds (Max 10 - Min 0.01 - Or no delay)
+
+(How long to wait before beginning auto-repeat of a held down button)
+ButtonRepeatAfter       0.5     # Seconds (Max 10 - Min 0.01 - Or no delay)
+
+(A pause to place between each button repeat when in auto-repeat mode)
+DelayButtonRepeat       0.1     # Seconds (Max 10 - Min 0.01 - Or no delay)
+
+_Intuos3 small, Intuos3/Cintiq_:
+
+(If a button should auto-repeat or not)
+RepeatButton9           0       # Switch 1/0 (Press and hold button repeat keys)
+RepeatButton10          0       # Switch 1/0 (Press and hold button repeat keys)
+.
+.
+
+_Graphire4 BlueTooth, Graphire4_:
+
+(If a button should auto-repeat or not)
+RepeatLeft              0       # Switch 1/0 (Press and hold button repeat keys)
+RepeatRight             0       # Switch 1/0 (Press and hold button repeat keys)
+
+_Intuos3 small, Intuos3/Cintiq_:
+
+(How long to wait before beginning auto-repeat of a held touch strip)
+TouchRepeatAfter        0.6     # Seconds (Max 10 - Min 0.01 - Or no delay)
+
+(A pause to place between each touch strip repeat when in auto-repeat mode)
+DelayTouchRepeat        0.1     # Seconds (Max 10 - Min 0.01 - Or no delay)
+
+(If a touch strip should auto-repeat or not)
+RepeatLeftUp            1       # Switch 1/0 (Finger held at top repeat keys)
+RepeatLeftDown          1       # Switch 1/0 (Finger held at bottom repeat keys)
+.
+.
+
+Apart from these fields there are some new 'fake keycodes' to use (for tablet
+Rotate and stylus PressCurve). Full information is provided in a section
+further down in this file.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+NEW in expresskeys version 0.3.0 and above:
+
+Config file version 3 is completely independent of how you organize the
+program fields or records. Only limitation [deleted obsolete limitation. Ed.]
+
+This open-ended nature was enforced to facilitate the inclusion of
+future fields - or elimination of already existing ones - without
+invalidating what the user already has (which happens now when going
+from version 2 to 3).
+
+The new field introduced with version 3 is Stylus1PressCurve. Here's
+what I've written in the README file:
+
+"It can also provide an automatic change of stylus pressure sensitivity - aka
+PressCurve - going from one program window to the next, by way of "xsetwacom"
+from the driver package at linuxwacom.sourceforge.net This feature is
+independent of the connected tablet model."
+
+Finding good numbers (they must be in groups of four) for this field is
+not an intuitive act... The "wacomcpl" program - the tcl utility from
+linuxwacom - uses a slider (stylus/eraser --> Feel --> Sensitivity)
+with steps from 1 (Soft) to 7 (Firm) and 4 being the default. It then
+calls the "xsetwacom" program to actually set a true "Bezier curve".
+
+The seven curves chosen by wacomcpl are (Soft to Firm):
+
+1               2               3               4 (default)
+"0 75 25 100" | "0 50 50 100" | "0 25 75 100" | "0 0 100 100"
+5               6               7
+"25 0 100 75" | "50 0 100 50" | "75 0 100 25"
+
+Experimenting with other values can probably be a fun... activity on a
+rainy day. My thanks go to Pablo Gimenez, a user who wanted this
+automatic pressure sensitivity change. He made me start thinking about
+a possible implementation.
+
+It works really well but, as I've written in the BUGS file:
+
+--Quote--
+
+[The grisly story about Qt-based programs, like KDE, deleted. See BUGS. Ed.]
+
+--Unquote--
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The "default" entry holds keycodes to make the pad buttons behave just
+as Wacom list them in the Quick Start Guide: Shift, Alt, Ctrl and Space
+mirrored on both sides. Touch Strip and Scroll Wheel support is turned on by
+default. Use the number 0 in the "HandleTouchStrips" field to turn it off
+(a Graphire4 user changes the "HandleScrollWheel" field). You get
+'Mouse-scrolling' Up/Down on the left strip (wheel) and Arrow-key Right/Left
+on the right with the values currently written to the minimal config file.
+Change direction of the movement by switching the "Up" and "Down" values.
+
+Both pad buttons and touch strips/scroll wheel can send 32 keys at a time if
+so configured.
+
+* Fake keycodes: 991, 992, 993, 994, 995, 996, 997 *
+If you want a button to do a mouse button press instead of a keypress,
+use a value between 991 and 997 in the corresponding keycode field, where
+991 represents mouse button 1, 992 button 2, and so on. Only existing mouse
+buttons, defined through the driver of the active core pointer, can be
+simulated. If buttons 4 and 5 are available they normally control vertical
+scrolling, like the mouse's scroll wheel (button 4 scrolls up, button 5
+scrolls down.) If buttons 6 and 7 are available they may control horizontal
+scrolling (button 6 scrolls left, button 7 scrolls right) or may match
+extra buttons on the mouse.
+
+* Fake keycode: 999 *
+If you want a button to do stylus mode toggling between Absolute and Relative,
+use the value 999 in the corresponding keycode field. To be able to switch
+mode anywhere each program block must contain one 999 definition.
+
+* Fake keycodes: 1001, 1002, 1003 *
+Instead of defining a fixed stylus PressCurve for different program blocks,
+you can use three values as keycodes to alter the curve interactively. 1001
+will decrease the PressCurve, while 1003 will increase it. 1002 restores the
+curve to its default state: "0 0 100 100". Both the upward and downward curve
+changes flip over in a carousel fashion at the top and bottom values.
+
+* Fake keycodes: 1004, 1005, 1006, 1007, 1008, 1009 *
+Use the value 1004 to return from a tablet rotation (NONE), 1005 to flip a
+tablet 180 degrees (HALF), 1006 to rotate 90 degrees clock-wise (CW) and
+1007 to rotate 90 degrees counter-clock-wise (CCW). By using 1008 you can
+rotate the tablet endlessly in a clock-wise manner (CW-HALF-CCW-NONE-CW-)
+and 1009 does the same motion counter-clock-wise (CCW-HALF-CW-NONE-CCW-).
+Looking down on the tablet and tilting the head '90' degrees to the right
+would simulate a CW operation.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The "Gimp" entry also has the touch strips (wheel) turned on by default,
+and I've populated it with keycodes that I actually use myself. This was
+done to minimize confusion about how to fill in the fields. As it stands,
+they are (for my Swedish keyboard):
+
+20 = "+" = Gimp Zoom In. Left touch strip up motion (G4: wheel up)
+61 = "-" = Gimp Zoom Out. Left touch strip down motion (G4: wheel down)
+
+64 = "Alt" plus 20 = "+" = Gimp Next Brush. Right touch strip up motion
+64 = "Alt" plus 61 = "-" = Gimp Previous Brush. Right touch strip down motion
+
+(The above has been configured through the Gimp menu: File -> Preferences ->
+Interface -> Configure Keyboard Shortcuts -> Context)
+
+50 = "Shift" = Button 9
+64 = "Alt"   = Button 10 (Holding this, copies Right touch strip to Left!)
+37 = "Ctrl"  = Button 11
+65 = "Space" = Button 12
+
+37 = "Ctrl" plus 29 = "y" = Gimp Redo. Button 13 (G4: left button)
+37 = "Ctrl" plus 52 = "z" = Gimp Undo. Button 14 (G4: right button)
+999 = "Stylus Mode Toggle" = Button 15
+65 = "Space" = Button 16
+
+The "Blender" entry is similarly a private choice for the 3D program blender.
+
+I felt, and feel, that an "XTerm" is too important a window to have _any_
+interference from the pad. But observe that I want to be able to switch
+stylus mode even with such a window in focus, so I've set 999 in one field.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Below is some ASCII art showing the "default" program record:
+
+Left ExpressKey Pad
+------------
+|  |   |   |		Wacom Intuos3 defaults are:
+|  | 9 | T |
+|11|---| O |		Key 9  = (left) Shift	= keycode 50
+|  |10 | U |		Key 10 = (left) Alt	= keycode 64
+|------| C |		Key 11 = (left) Control	= keycode 37
+|  12  | H |		Key 12 = Space		= keycode 65
+------------
+
+Right ExpressKey Pad
+------------
+|   |   |  |		Wacom Intuos3 defaults are:
+| T |13 |  |
+| O |---|15|		Key 13 = (left) Shift	= keycode 50
+| U |14 |  |		Key 14 = (left) Alt	= keycode 64
+| C |------|		Key 15 = (left) Control	= keycode 37
+| H |  16  |		Key 16 = Space		= keycode 65
+------------
+
+
+           ExpressKeys Pad
+--------------------------------------
+| Left Button | Wheel | Right Button |
+--------------------------------------
+
+    Wacom Graphire4 defaults are:
+
+Left Button  = (left) Shift   = keycode 50
+Right Button = (left) Alt     = keycode 64
+
+
+           ExpressKeys Pad
+    -------------------------------
+    | Left Button || Right Button |
+    -------------------------------
+
+    Wacom Graphire4 BT defaults are:
+
+Left Button  = (left) Shift   = keycode 50
+Right Button = (left) Alt     = keycode 64
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Sometimes desktops or window managers "steal" certain keypresses/combinations.
+If you experience that, look for a way to change the keybindings of your
+environment.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
